@@ -19,9 +19,9 @@ function Canvas() {
         });
 
         const vertices = new Float32Array([
-            -0.8, -0.8,
-            0.8, -0.8,
-            0.8, 0.8
+            -0.8, -0.8, 1.0, 0.847, 0.0,
+             0.8, -0.8, 1.0, 0.847, 0.0,
+             0.0,  0.8, 1.0, 0.247, 0.0
         ]);
 
         const vertexBuffer = device.createBuffer({
@@ -33,12 +33,20 @@ function Canvas() {
         device.queue.writeBuffer(vertexBuffer, 0, vertices);
 
         const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 8,
-            attributes: [{
-                format: "float32x2",
-                offset: 0,
-                shaderLocation: 0
-            }]
+            arrayStride: 20,
+            attributes: [
+                {
+                    format: "float32x2",
+                    offset: 0,
+                    shaderLocation: 0
+                },
+
+                {
+                    format: "float32x3",
+                    offset: 8,
+                    shaderLocation: 1
+                }
+            ]
         };
 
         const vertexShaderModule = device.createShaderModule({
@@ -75,14 +83,14 @@ function Canvas() {
             colorAttachments: [{
                 view: context!.getCurrentTexture().createView(),
                 loadOp: "clear",
-                clearValue: {r: 0.3, g: 0.3, b:0.3, a: 1},
+                clearValue: {r: 0.3, g: 0.3, b: 0.3, a: 1},
                 storeOp: "store"
             }]
         });
 
         pass.setPipeline(pipeline);
         pass.setVertexBuffer(0, vertexBuffer);
-        pass.draw(vertices.length / 2);
+        pass.draw(3, 1, 0, 0);
 
         pass.end();
 

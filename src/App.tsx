@@ -7,7 +7,9 @@ import "dockview/dist/styles/dockview.css";
 function App() {
     const components = {
         default: () => {
-            return <></>;
+            return (
+                <></>
+            );
         },
 
         canvas: () => {
@@ -36,7 +38,6 @@ function App() {
                 title: "Canvas"
             }
         });
-
 
         event.api.addPanel({
             id: "settings",
@@ -69,7 +70,6 @@ function App() {
         const canvas_panel = event.api.getPanel("canvas");
         canvas_panel!.group.locked = true;
 
-
         const files_panel = event.api.getPanel("files");
         files_panel!.group.locked = true;
         files_panel!.api.setSize({height:300});
@@ -82,7 +82,7 @@ function App() {
     return (
         <div className="app">
             <DockviewReact 
-                className="dockview-theme-dark"
+                className="dockview-theme-abyss"
                 onReady={onReady} 
                 components={components}
                 tabComponents={tabComponents}
