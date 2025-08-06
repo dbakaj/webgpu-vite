@@ -2,6 +2,8 @@ import {useEffect, useRef} from "react";
 import Renderer from "../engine/Renderer.ts";
 import Mesh from "../engine/Mesh.ts";
 
+import latticeUrl from '../assets/lattice.glb?url';
+
 function Canvas() {
     const cref = useRef<HTMLCanvasElement>(null);
 
@@ -11,7 +13,7 @@ function Canvas() {
             await renderer.init();
             
             const mesh = new Mesh(renderer.device);
-            await mesh.load("lattice.glb");
+            await mesh.load(latticeUrl);
             
             function run() {
                 renderer.render(mesh);
