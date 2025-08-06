@@ -1,108 +1,29 @@
 import {useEffect, useRef} from "react";
-import vertexShader from "../shaders/vertex.wgsl?raw";
-import fragmentShader from "../shaders/fragment.wgsl?raw";
+import Renderer from "../engine/Renderer.ts";
+import Mesh from "../engine/Mesh.ts";
 
 function Canvas() {
     const cref = useRef<HTMLCanvasElement>(null);
 
-    async function render() {
-        const canvas = cref.current!;
-        const adapter = await navigator.gpu.requestAdapter();
-        const device = await adapter!.requestDevice();
-
-        const context = canvas.getContext("webgpu");
-
-        const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        context!.configure({
-            device: device,
-            format: canvasFormat
-        });
-
-        const vertices = new Float32Array([
-            -0.8, -0.8, 1.0, 0.847, 0.0,
-             0.8, -0.8, 1.0, 0.847, 0.0,
-             0.0,  0.8, 1.0, 0.247, 0.0
-        ]);
-
-        const vertexBuffer = device.createBuffer({
-            label: "VertexBuffer",
-            size: vertices.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-        });
-
-        device.queue.writeBuffer(vertexBuffer, 0, vertices);
-
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            arrayStride: 20,
-            attributes: [
-                {
-                    format: "float32x2",
-                    offset: 0,
-                    shaderLocation: 0
-                },
-
-                {
-                    format: "float32x3",
-                    offset: 8,
-                    shaderLocation: 1
-                }
-            ]
-        };
-
-        const vertexShaderModule = device.createShaderModule({
-            label: "VertexShader",
-            code : vertexShader
-        });
-
-        const fragmentShaderModule = device.createShaderModule({
-            label: "FragmentShader",
-            code: fragmentShader
-        });
-
-        const pipeline = device.createRenderPipeline({
-            label: "Pipeline",
-            layout: "auto",
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: "vertexMain",
-                buffers: [vertexBufferLayout]
-            },
-
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: "fragmentMain",
-                targets: [{
-                    format: canvasFormat
-                }]
-            }
-        });
-
-        const encoder = device.createCommandEncoder();
-
-        const pass = encoder.beginRenderPass({
-            colorAttachments: [{
-                view: context!.getCurrentTexture().createView(),
-                loadOp: "clear",
-                clearValue: {r: 0.3, g: 0.3, b: 0.3, a: 1},
-                storeOp: "store"
-            }]
-        });
-
-        pass.setPipeline(pipeline);
-        pass.setVertexBuffer(0, vertexBuffer);
-        pass.draw(3, 1, 0, 0);
-
-        pass.end();
-
-        device.queue.submit([encoder.finish()]);
-    }
-
     useEffect(() => {
-        render();
-    });
+        (async() => {
+            const renderer = Renderer.create(cref.current!);
+            await renderer.init();
+            
+            const mesh = new Mesh(renderer.device);
+            await mesh.load("src/assets/lattice.glb");
+            
+            function run() {
+                renderer.render(mesh);
+                requestAnimationFrame(run);
+            }
+            
+            run();
+        })();
+    }, []);
 
     return (
-        <canvas ref={cref} width="640" height="480"></canvas>
+        <canvas ref={cref} width="1280" height="720"></canvas>
     );
 }
 

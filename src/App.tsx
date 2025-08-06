@@ -63,7 +63,7 @@ function App() {
 
             position: {
                 referencePanel: "canvas",
-                direction: "below"
+                direction: "left"
             }
         });
 
@@ -72,7 +72,7 @@ function App() {
 
         const files_panel = event.api.getPanel("files");
         files_panel!.group.locked = true;
-        files_panel!.api.setSize({height:300});
+        files_panel!.api.setSize({width:300});
 
         const settings_panel = event.api.getPanel("settings");
         settings_panel!.group.locked = true;
