@@ -11,7 +11,7 @@ function Canvas() {
             await renderer.init();
             
             const mesh = new Mesh(renderer.device);
-            await mesh.load("src/assets/lattice.glb");
+            await mesh.load("/webgpu-vite/src/assets/lattice.glb");
             
             function run() {
                 renderer.render(mesh);
