@@ -1,20 +1,21 @@
 import { NodeIO } from "@gltf-transform/core";
 import { KHRMeshQuantization } from '@gltf-transform/extensions';
+import WebGPUContext from "./WebGPUContext";
 
 class Mesh {
-    private device: GPUDevice;
+    private device!: GPUDevice;
 
     public vertexBuffer!: GPUBuffer;
     public indexBuffer!: GPUBuffer;
     public indexCount = 0;
 
-    public constructor(device: GPUDevice) {
-        this.device = device;
+    public constructor() {
+        const webgpuContext = WebGPUContext.getInstance();
+        this.device = webgpuContext.getDevice();
     }
 
     public async load(url: string) {
         const io = new NodeIO().registerExtensions([KHRMeshQuantization]);
-
         const buffer = await fetch(url).then(r => r.arrayBuffer());
         const uint8Array = new Uint8Array(buffer);
         const doc = await io.readBinary(uint8Array);
@@ -44,8 +45,8 @@ class Mesh {
             
             else {
                 vertexData[i * 9 + 3] = 1.0;
-                vertexData[i * 9 + 4] = 1.0;
-                vertexData[i * 9 + 5] = 1.0;
+                vertexData[i * 9 + 4] = 0.647;
+                vertexData[i * 9 + 5] = 0.0;
             }
 
             if (norm) {

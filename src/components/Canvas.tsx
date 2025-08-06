@@ -1,27 +1,17 @@
 import {useEffect, useRef} from "react";
-import Renderer from "../engine/Renderer.ts";
-import Mesh from "../engine/Mesh.ts";
-
-import latticeUrl from '../assets/lattice.glb?url';
+import TestApplication from "../TestApplication.ts";
 
 function Canvas() {
     const cref = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
+
         (async() => {
-            const renderer = Renderer.create(cref.current!);
-            await renderer.init();
-            
-            const mesh = new Mesh(renderer.device);
-            await mesh.load(latticeUrl);
-            
-            function run() {
-                renderer.render(mesh);
-                requestAnimationFrame(run);
-            }
-            
-            run();
+            const testApp = new TestApplication();
+            await testApp.init(cref.current!);
+            testApp.run();
         })();
+
     }, []);
 
     return (

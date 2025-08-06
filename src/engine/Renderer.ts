@@ -3,14 +3,12 @@ import fragmentShader from "../shaders/fragment.wgsl?raw";
 import Mesh from "./Mesh.ts";
 import { Camera, CameraController } from "./Camera.ts"
 import { mat3, mat4 } from 'gl-matrix';
+import WebGPUContext from "../engine/WebGPUContext.ts";
 
 class Renderer {
-    private static instance: Renderer;
-
     private canvas!: HTMLCanvasElement;
-
     public device!: GPUDevice;
-    public context!: GPUCanvasContext | null;
+    public canvasContext!: GPUCanvasContext | null;
 
     private pipeline!: GPURenderPipeline;
     
@@ -23,33 +21,14 @@ class Renderer {
 
     private cameraController!: CameraController; 
 
-    private constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
+    public constructor() {
+        const webgpuContext = WebGPUContext.getInstance();
+        this.device = webgpuContext.getDevice();
+        this.canvas = webgpuContext.getCanvas();
+        this.canvasContext = webgpuContext.getCanvasContext();
 
         this.cameraController = new CameraController(new Camera(Math.PI/4, 1280/720, 0.1, 100));
         this.cameraController.initEvents(this.canvas);
-    }
-
-    public static create(canvas: HTMLCanvasElement) {
-        if (!Renderer.instance) {
-            Renderer.instance = new Renderer(canvas);
-        }
-
-        return Renderer.instance;
-    }
-
-    public async init() {
-        const adapter = await navigator.gpu.requestAdapter();
-        this.device = await adapter!.requestDevice();
-
-        this.context = this.canvas.getContext("webgpu");
-
-        const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-
-        this.context!.configure({
-            device: this.device,
-            format: canvasFormat
-        });
 
         this.depthTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
@@ -61,7 +40,7 @@ class Renderer {
         this.msaaColourTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
             sampleCount: 4,
-            format: canvasFormat,
+            format: navigator.gpu.getPreferredCanvasFormat(),
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
 
@@ -144,7 +123,7 @@ class Renderer {
                 module: fragmentShaderModule,
                 entryPoint: "fragmentMain",
                 targets: [{
-                    format: canvasFormat
+                    format: navigator.gpu.getPreferredCanvasFormat()
                 }]
             },
 
@@ -185,7 +164,7 @@ class Renderer {
         const pass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: this.msaaColourTexture.createView(),
-                resolveTarget: this.context!.getCurrentTexture().createView(),
+                resolveTarget: this.canvasContext!.getCurrentTexture().createView(),
                 loadOp: "clear",
                 clearValue: {r: 0.3, g: 0.3, b: 0.3, a: 1},
                 storeOp: "store"
