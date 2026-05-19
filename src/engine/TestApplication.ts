@@ -1,7 +1,7 @@
-import Application from "./engine/Application";
-import Mesh from "./engine/Mesh";
-import Renderer from "./engine/Renderer";
-import latticeUrl from './assets/lattice.glb?url';
+import Application from "./Application.ts";
+import Mesh from "./Mesh.ts";
+import Renderer from "./Renderer.ts";
+//import latticeUrl from '../assets/lattice.glb?url';
 
 class TestApplication extends Application {
     private renderer!: Renderer;
@@ -11,7 +11,8 @@ class TestApplication extends Application {
         this.renderer = new Renderer();
         this.mesh = new Mesh();
         
-        await this.mesh.load(latticeUrl);
+        await this.mesh.loadCube();
+        //await this.mesh.load(latticeUrl);
     }
     
     protected onRender() {

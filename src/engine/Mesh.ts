@@ -1,6 +1,6 @@
 import { NodeIO } from "@gltf-transform/core";
 import { KHRMeshQuantization } from '@gltf-transform/extensions';
-import WebGPUContext from "./WebGPUContext";
+import WebGPUContext from "./WebGPUContext.ts";
 
 class Mesh {
     private device!: GPUDevice;
@@ -12,6 +12,78 @@ class Mesh {
     public constructor() {
         const webgpuContext = WebGPUContext.getInstance();
         this.device = webgpuContext.getDevice();
+    }
+
+    public async loadCube() {
+        const vertices = new Float32Array([
+            -1, -1,  1,  1,1,1,  0,0,1,
+             1, -1,  1,  1,1,1,  0,0,1,
+             1,  1,  1,  1,1,1,  0,0,1,
+            -1,  1,  1,  1,1,1,  0,0,1,
+
+            -1, -1, -1,  1,1,1,  0,0,-1,
+             1, -1, -1,  1,1,1,  0,0,-1,
+             1,  1, -1,  1,1,1,  0,0,-1,
+            -1,  1, -1,  1,1,1,  0,0,-1,
+
+            -1, -1, -1,  1,1,1,  -1,0,0,
+            -1, -1,  1,  1,1,1,  -1,0,0,
+            -1,  1,  1,  1,1,1,  -1,0,0,
+            -1,  1, -1,  1,1,1,  -1,0,0,
+
+             1, -1, -1,  1,1,1,  1,0,0,
+             1, -1,  1,  1,1,1,  1,0,0,
+             1,  1,  1,  1,1,1,  1,0,0,
+             1,  1, -1,  1,1,1,  1,0,0,
+
+            -1,  1, -1,  1,1,1,  0,1,0,
+            -1,  1,  1,  1,1,1,  0,1,0,
+             1,  1,  1,  1,1,1,  0,1,0,
+             1,  1, -1,  1,1,1,  0,1,0,
+
+            -1, -1, -1,  1,1,1,  0,-1,0,
+            -1, -1,  1,  1,1,1,  0,-1,0,
+             1, -1,  1,  1,1,1,  0,-1,0,
+             1, -1, -1,  1,1,1,  0,-1,0,
+        ]);
+
+        const indices = new Uint16Array([
+            0,1,2,
+            0,2,3,
+
+            4,6,5,
+            4,7,6,
+
+            8,9,10,
+            8,10,11,
+
+            12,14,13,
+            12,15,14,
+
+            16,17,18,
+            16,18,19,
+
+            20,22,21,
+            20,23,22
+        ]);
+
+        this.indexCount = indices.length;
+
+        this.vertexBuffer = this.device.createBuffer({
+            label: "VertexBuffer",
+            size: vertices.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        });
+
+        this.device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
+
+        this.indexBuffer = this.device.createBuffer({
+            label: "IndexBuffer",
+            size: indices.byteLength,
+            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        });
+
+        this.device.queue.writeBuffer(this.indexBuffer, 0, indices);
     }
 
     public async load(url: string) {
@@ -38,9 +110,9 @@ class Mesh {
             vertexData[i * 9 + 2] = pos[i * 3 + 2];
             
             if (col) {
-                vertexData[i * 9 + 3] = col[i * 3 + 0];
-                vertexData[i * 9 + 4] = col[i * 3 + 1];
-                vertexData[i * 9 + 5] = col[i * 3 + 2];
+                vertexData[i * 9 + 3] = 1.0;
+                vertexData[i * 9 + 4] = 1.0;
+                vertexData[i * 9 + 5] = 1.0;
             } 
             
             else {

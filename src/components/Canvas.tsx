@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react";
-import TestApplication from "../TestApplication.ts";
+import TestApplication from "../engine/TestApplication.ts";
 
 function Canvas() {
     const cref = useRef<HTMLCanvasElement>(null);
@@ -13,7 +13,7 @@ function Canvas() {
         })();
 
     }, []);
-
+    
     return (
         <canvas ref={cref} width="1280" height="720"></canvas>
     );

@@ -4,6 +4,7 @@ import Mesh from "./Mesh.ts";
 import { Camera, CameraController } from "./Camera.ts"
 import { mat3, mat4 } from 'gl-matrix';
 import WebGPUContext from "../engine/WebGPUContext.ts";
+import renderState from "./RenderState.ts";
 
 class Renderer {
     private canvas!: HTMLCanvasElement;
@@ -17,6 +18,8 @@ class Renderer {
 
     private uniformBuffer!: GPUBuffer;
     private normalBuffer!: GPUBuffer;
+    private colourBuffer!: GPUBuffer;
+
     private uniformBindGroup!: GPUBindGroup;
 
     private cameraController!: CameraController; 
@@ -49,8 +52,13 @@ class Renderer {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-         this.normalBuffer = this.device.createBuffer({
-            size: 16 * Float32Array.BYTES_PER_ELEMENT,
+        this.normalBuffer = this.device.createBuffer({
+            size: 12 * Float32Array.BYTES_PER_ELEMENT,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        this.colourBuffer = this.device.createBuffer({
+            size: 4* Float32Array.BYTES_PER_ELEMENT,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -66,6 +74,12 @@ class Renderer {
                     binding: 1,
                     visibility: GPUShaderStage.VERTEX,
                     buffer: { type: "uniform" }
+                },
+
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: { type: "uniform" }
                 }
             ]
         });
@@ -74,12 +88,14 @@ class Renderer {
             layout: uniformBindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
-                { binding: 1, resource: { buffer: this.normalBuffer } }
+                { binding: 1, resource: { buffer: this.normalBuffer } },
+                { binding: 2, resource: { buffer: this.colourBuffer } }
             ]
         });
 
         const vertexBufferLayout: GPUVertexBufferLayout = {
             arrayStride: 36,
+            stepMode: "vertex",
             attributes: [
                 {
                     format: "float32x3",
@@ -149,16 +165,22 @@ class Renderer {
         camera.update();
 
         const model = mat4.create();
+        mat4.translate(model, model, renderState.position);
+        mat4.rotateX(model, model, renderState.rotation[0]);
+        mat4.rotateY(model, model, renderState.rotation[1]);
+        mat4.rotateZ(model, model, renderState.rotation[2]);
+        mat4.scale(model, model, renderState.scale);
+
         const mvp = mat4.multiply(mat4.create(), camera.viewProjection, model);
 
         const normalMatrix = mat3.create();
         mat3.fromMat4(normalMatrix, model);
-
         mat3.invert(normalMatrix, normalMatrix);
         mat3.transpose(normalMatrix, normalMatrix);
 
         this.device.queue.writeBuffer(this.uniformBuffer, 0, mvp as Float32Array);
         this.device.queue.writeBuffer(this.normalBuffer, 0, normalMatrix as Float32Array);
+        this.device.queue.writeBuffer(this.colourBuffer, 0, new Float32Array([renderState.meshColour[0], renderState.meshColour[1], renderState.meshColour[2], 1.0]));
 
         const encoder = this.device.createCommandEncoder();
         const pass = encoder.beginRenderPass({
@@ -166,7 +188,7 @@ class Renderer {
                 view: this.msaaColourTexture.createView(),
                 resolveTarget: this.canvasContext!.getCurrentTexture().createView(),
                 loadOp: "clear",
-                clearValue: {r: 0.3, g: 0.3, b: 0.3, a: 1},
+                clearValue: {r: 0.05, g: 0.05, b: 0.07, a: 1},
                 storeOp: "store"
             }],
 
