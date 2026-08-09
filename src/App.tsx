@@ -3,11 +3,7 @@ import "./App.css";
 import Canvas from "./components/Canvas.tsx";
 import renderState from "./engine/RenderState.ts";
 
-import {
-    DockviewReact,
-    type DockviewReadyEvent,
-    type IDockviewPanelHeaderProps
-} from "dockview";
+import { DockviewReact, type DockviewReadyEvent, type IDockviewPanelHeaderProps } from "dockview";
 
 import "dockview/dist/styles/dockview.css";
 
@@ -15,40 +11,85 @@ function SettingsPanel() {
     const [, force] = useState(0);
 
     const colour = "#" + renderState.meshColour.map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
+    
+    const groups = [
+        {
+            label: "Position",
+            values: renderState.position,
+            min: -10,
+            max: 10,
+            step: 0.1,
+            isRotation: false,
+        },
+        {
+            label: "Rotation",
+            values: renderState.rotation,
+            min: -Math.PI,
+            max: Math.PI,
+            step: Math.PI / 180,
+            isRotation: true,
+        },
+        {
+            label: "Scale",
+            values: renderState.scale,
+            min: 0.1,
+            max: 5,
+            step: 0.1,
+            isRotation: false,
+        },
+    ];
 
     return (
-        <div style={{ color: "white", padding: "16px", fontFamily: "Inter, sans-serif" }}>
-            <div style={{ background: "#1e1e1e", border: "1px solid #2d2d2d", borderRadius: "12px", padding: "16px", marginBottom: 16 }}>
-                <h3>Mesh Colour</h3>
+        <div className="settings-panel">
+            <div className="settings-section">
+                <h3 className="settings-section-title">
+                    Mesh Colour
+                </h3>
 
-                <input type="color"
-                    value={colour}
-                    onChange={(e) => {
-                        const hex = e.target.value;
+                <div className="colour-row">
+                    <input
+                        className="colour-input"
+                        type="color"
+                        value={colour}
+                        onChange={(e) => {
+                            const hex = e.target.value;
 
-                        renderState.meshColour = [
-                            parseInt(hex.slice(1, 3), 16) / 255,
-                            parseInt(hex.slice(3, 5), 16) / 255,
-                            parseInt(hex.slice(5, 7), 16) / 255
-                        ];
+                            renderState.meshColour = [
+                                parseInt(hex.slice(1, 3), 16) / 255,
+                                parseInt(hex.slice(3, 5), 16) / 255,
+                                parseInt(hex.slice(5, 7), 16) / 255,
+                            ];
 
-                        force(t => t + 1);
-                    }}
-                />
+                            force((t) => t + 1);
+                        }}
+                    />
+
+                    <span className="colour-value">
+                        {colour.toUpperCase()}
+                    </span>
+                </div>
             </div>
 
-            {[
-                { label: "Position", values: renderState.position, min: -10, max: 10, step: 0.1 },
-                { label: "Rotation", values: renderState.rotation, min: -Math.PI, max: Math.PI, step: 0.01 },
-                { label: "Scale", values: renderState.scale, min: 0.1, max: 5, step: 0.1 }
-            ].map((group) => (
-                <div key={group.label} style={{ background: "#1e1e1e", border: "1px solid #2d2d2d", borderRadius: "12px", padding: "16px", marginBottom: 16 }}>
-                    <h3 style={{ marginBottom: 12 }}>{group.label}</h3>
-                    <div style={{ display: "flex", gap: 12 }}>
-                        {["X", "Y", "Z"].map((axis, i) => (
-                            <div key={axis} style={{ flex: 1 }}>
-                                <div style={{ fontSize: 11, color: "#888" }}>
-                                    {axis}: {group.values[i].toFixed(2)}
+            {groups.map((group) => (
+                <div className="settings-section" key={group.label}>
+                    <h3 className="settings-section-title">
+                        {group.label}
+                    </h3>
+
+                    {["X", "Y", "Z"].map((axis, i) => {
+                        const displayValue = group.isRotation
+                            ? group.values[i] * (180 / Math.PI)
+                            : group.values[i];
+
+                        return (
+                            <div className="vector-row" key={axis}>
+                                <div className="vector-label">
+                                    <span>{axis}</span>
+
+                                    <span className="vector-value">
+                                        {displayValue.toFixed(1)}
+                                        {group.isRotation ? "°" : ""}
+                                    </span>
                                 </div>
 
                                 <input
@@ -58,14 +99,15 @@ function SettingsPanel() {
                                     step={group.step}
                                     value={group.values[i]}
                                     onChange={(e) => {
-                                        group.values[i] = parseFloat(e.target.value);
-                                        force(t => t + 1);
+                                        group.values[i] =
+                                            parseFloat(e.target.value);
+
+                                        force((t) => t + 1);
                                     }}
-                                    style={{ width: "100%" }}
                                 />
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             ))}
         </div>
@@ -80,11 +122,13 @@ function App() {
     };
 
     const tabComponents = {
-        default: (props: IDockviewPanelHeaderProps<{ title: string }>) => (
-            <div className="panel-header">
-                <span>{props.params.title}</span>
-            </div>
-        )
+        default: (props: IDockviewPanelHeaderProps<{ title: string }>) => {
+            return (
+                <div className="panel-header">
+                    <span>{props.params.title}</span>
+                </div>
+            );
+        }
     };
 
     const onReady = (event: DockviewReadyEvent) => {

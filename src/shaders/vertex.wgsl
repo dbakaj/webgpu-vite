@@ -19,7 +19,6 @@ var<uniform> mvp: MVP;
 @group(0) @binding(1)
 var<uniform> normMat: NormalMatrix;
 
-
 @vertex
 fn vertexMain(@location(0) pos: vec3f, @location(1) colour: vec3f, @location(2) normal: vec3f) -> Output {
 
