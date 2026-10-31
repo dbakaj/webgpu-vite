@@ -2,11 +2,11 @@ import WebGPUContext from "./WebGPUContext";
 
 abstract class Application {
     protected abstract onRender(): void;
-    protected abstract onInit(): Promise<void>;
+    protected abstract onInit(): void;
     
     public async init(canvas: HTMLCanvasElement) {
         await WebGPUContext.create(canvas);
-        await this.onInit();
+        this.onInit();
     }
 
     public run() {

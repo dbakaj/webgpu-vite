@@ -1,15 +1,54 @@
-import { useState } from "react";
-import renderState from "../engine/RenderState.ts";
+import useEditor from "../editor/useEditor.ts";
 
 function SettingsPanel() {
-    const [, force] = useState(0);
+    const editor = useEditor();
+    const entity = editor.getSelectedEntity();
+    const entities = editor.getEntities();
 
-    const colour = "#" + renderState.meshColour.map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
+    if (!entity) {
+        return (
+            <div className="settings-panel">
+                <div className="settings-section">
+                    <h3 className="settings-section-title">
+                        Select Entity
+                    </h3>
+
+                    <select
+                        value=""
+                        onChange={(e) => {
+                            const index = Number(e.target.value);
+                            const selected = entities[index];
+
+                            if (selected) {
+                                editor.selectEntity(selected);
+                            }
+                        }}>
+                        
+                        <option value="">Select an entity</option>
+
+                        {entities.map((item, index) => (
+                            <option key={index} value={index}>
+                                Cube {index + 1}
+                            </option>                    
+                        ))}
+                    </select>
+
+                    <h3 className="settings-section-title">
+                        No Entity Selected
+                    </h3>
+                </div>
+            </div>
+        );
+    }
+
+    const selectedIndex = entities.indexOf(entity);
+
+    const colour = "#" + entity.meshColour.map((v) => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
     
     const groups = [
         {
             label: "Position",
-            values: renderState.position,
+            values: entity.position,
             min: -10,
             max: 10,
             step: 0.1,
@@ -18,7 +57,7 @@ function SettingsPanel() {
         
         {
             label: "Rotation",
-            values: renderState.rotation,
+            values: entity.rotation,
             min: -Math.PI,
             max: Math.PI,
             step: Math.PI / 180,
@@ -27,7 +66,7 @@ function SettingsPanel() {
 
         {
             label: "Scale",
-            values: renderState.scale,
+            values: entity.scale,
             min: 0.1,
             max: 5,
             step: 0.1,
@@ -37,6 +76,30 @@ function SettingsPanel() {
 
     return (
         <div className="settings-panel">
+            <div className="settings-section">
+                <h3 className="settings-section-title">
+                    Select Entity
+                </h3>
+
+                <select
+                    value={selectedIndex.toString()}
+                    onChange={(e) => {
+                        const index = Number(e.target.value);
+                        const selected = entities[index];
+
+                        if (selected) {
+                            editor.selectEntity(selected);
+                        }
+                    }}>
+
+                    {entities.map((item, index) => (
+                        <option key={index} value={index}>
+                            Cube {index + 1}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
             <div className="settings-section">
                 <h3 className="settings-section-title">
                     Mesh Colour
@@ -50,15 +113,12 @@ function SettingsPanel() {
                         onChange={(e) => {
                             const hex = e.target.value;
 
-                            renderState.meshColour = [
+                            editor.setMeshColour(entity, [
                                 parseInt(hex.slice(1, 3), 16) / 255,
                                 parseInt(hex.slice(3, 5), 16) / 255,
-                                parseInt(hex.slice(5, 7), 16) / 255,
-                            ];
-
-                            force((t) => t + 1);
-                        }}
-                    />
+                                parseInt(hex.slice(5, 7), 16) / 255
+                            ]);
+                        }}/>
 
                     <span className="colour-value">
                         {colour.toUpperCase()}
@@ -73,9 +133,7 @@ function SettingsPanel() {
                     </h3>
 
                     {["X", "Y", "Z"].map((axis, i) => {
-                        const displayValue = group.isRotation
-                            ? group.values[i] * (180 / Math.PI)
-                            : group.values[i];
+                        const displayValue = group.isRotation ? group.values[i] * (100/Math.PI) : group.values[i];
 
                         return (
                             <div className="vector-row" key={axis}>
@@ -90,17 +148,25 @@ function SettingsPanel() {
 
                                 <input
                                     type="range"
-                                    min={group.min}
-                                    max={group.max}
-                                    step={group.step}
-                                    value={group.values[i]}
+                                    min={group.isRotation ? -180 : group.min}
+                                    max={group.isRotation ? 180 : group.max}
+                                    step={group.isRotation ? 1 : group.step}
+                                    value={group.isRotation ? displayValue : group.values[i]}
                                     onChange={(e) => {
-                                        group.values[i] =
-                                            parseFloat(e.target.value);
+                                        const value = parseFloat(e.target.value);
 
-                                        force((t) => t + 1);
-                                    }}
-                                />
+                                        if (group.label === "Position") {
+                                            editor.setPosition(entity, i, value);
+                                        }
+                                        
+                                        else if (group.label === "Rotation") {
+                                            editor.setRotation(entity, i, value * (Math.PI/180));
+                                        }
+
+                                        else if (group.label === "Scale") {
+                                            editor.setScale(entity, i, value);
+                                        }
+                                    }}/>
                             </div>
                         );
                     })}

@@ -1,16 +1,22 @@
+import { useState } from "react";
+
 import "./App.css";
-import Canvas from "./components/Canvas.tsx";
+import ViewPort from "./components/ViewPort.tsx";
 import SettingsPanel from "./components/SettingsPanel.tsx";
+import EditorApplication from "./editor/EditorApplication.ts";
+import EditorProvider from "./editor/EditorProvider.tsx";
 
 import { DockviewReact, type DockviewReadyEvent, type IDockviewPanelHeaderProps } from "dockview";
 
 import "dockview/dist/styles/dockview.css";
 
 function App() {
+    const [editor] = useState(() => new EditorApplication());
+    
     const components = {
         default: () => <></>,
         settings: () => <SettingsPanel />,
-        canvas: () => <Canvas />
+        viewport: () => <ViewPort />
     };
 
     const tabComponents = {
@@ -25,10 +31,10 @@ function App() {
 
     const onReady = (event: DockviewReadyEvent) => {
         event.api.addPanel({
-            id: "canvas",
-            component: "canvas",
+            id: "viewport",
+            component: "viewport",
             tabComponent: "default",
-            params: { title: "Canvas" }
+            params: { title: "ViewPort" }
         });
 
         event.api.addPanel({
@@ -37,7 +43,7 @@ function App() {
             tabComponent: "default",
             params: { title: "Settings" },
             position: {
-                referencePanel: "canvas",
+                referencePanel: "viewport",
                 direction: "right"
             }
         });
@@ -48,12 +54,12 @@ function App() {
             tabComponent: "default",
             params: { title: "Files" },
             position: {
-                referencePanel: "canvas",
+                referencePanel: "viewport",
                 direction: "left"
             }
         });
 
-        const canvas_panel = event.api.getPanel("canvas");
+        const canvas_panel = event.api.getPanel("viewport");
         canvas_panel!.group.locked = true;
 
         const files_panel = event.api.getPanel("files");
@@ -67,13 +73,15 @@ function App() {
 
     return (
         <div className="app">
-            <DockviewReact
-                className="dockview-theme-abyss"
-                onReady={onReady}
-                components={components}
-                tabComponents={tabComponents}
-                singleTabMode="fullwidth"
-            />
+            <EditorProvider editor={editor}>
+                <DockviewReact
+                    className="dockview-theme-abyss"
+                    onReady={onReady}
+                    components={components}
+                    tabComponents={tabComponents}
+                    singleTabMode="fullwidth"
+                />
+            </EditorProvider>
         </div>
     );
 }

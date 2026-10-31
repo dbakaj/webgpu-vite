@@ -3,7 +3,7 @@ import { mat4 } from 'gl-matrix';
 class Camera {
     public yaw = 0;
     public pitch = Math.PI/8;
-    public zoom = 5;
+    public zoom = 7;
 
     private projection!: mat4;
     public viewProjection!: mat4;

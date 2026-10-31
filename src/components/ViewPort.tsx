@@ -1,22 +1,21 @@
 import {useEffect, useRef} from "react";
-import TestApplication from "../engine/TestApplication.ts";
+import useEditor from "../editor/useEditor";
 
-function Canvas() {
+function ViewPort() {
     const cref = useRef<HTMLCanvasElement>(null);
+    const editor = useEditor();
 
     useEffect(() => {
-
         (async() => {
-            const testApp = new TestApplication();
-            await testApp.init(cref.current!);
-            testApp.run();
+            await editor.init(cref.current!);
+            editor.run();
         })();
 
-    }, []);
+    }, [editor]);
     
     return (
         <canvas ref={cref} width="1280" height="720"></canvas>
     );
 }
 
-export default Canvas;
+export default ViewPort;

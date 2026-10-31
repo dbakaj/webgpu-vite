@@ -1,10 +1,10 @@
 import vertexShader from "../shaders/vertex.wgsl?raw";
 import fragmentShader from "../shaders/fragment.wgsl?raw";
-import Mesh from "./Mesh.ts";
+
+import Scene from "./Scene.ts";
 import { Camera, CameraController } from "./Camera.ts"
 import { mat3, mat4 } from 'gl-matrix';
 import WebGPUContext from "../engine/WebGPUContext.ts";
-import renderState from "./RenderState.ts";
 
 class Renderer {
     private canvas!: HTMLCanvasElement;
@@ -16,13 +16,15 @@ class Renderer {
     private depthTexture!: GPUTexture;
     private msaaColourTexture!: GPUTexture;
 
-    private uniformBuffer!: GPUBuffer;
-    private normalBuffer!: GPUBuffer;
-    private colourBuffer!: GPUBuffer;
-
+    private uniformBindGroupLayout!: GPUBindGroupLayout;
     private uniformBindGroup!: GPUBindGroup;
+    private uniformBuffer!: GPUBuffer;
 
-    private cameraController!: CameraController; 
+    private cameraController!: CameraController;
+
+    private readonly uniformSize = 128;
+    private readonly uniformStride: number;
+    private uniformCapacity = 0;
 
     public constructor() {
         const webgpuContext = WebGPUContext.getInstance();
@@ -33,6 +35,21 @@ class Renderer {
         this.cameraController = new CameraController(new Camera(Math.PI/4, 1280/720, 0.1, 100));
         this.cameraController.initEvents(this.canvas);
 
+        const alignment = this.device.limits.minUniformBufferOffsetAlignment;
+        this.uniformStride = Math.ceil(this.uniformSize / alignment) * alignment;
+
+        this.uniformBindGroupLayout = this.device.createBindGroupLayout({
+            entries: [{
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: "uniform",
+                    hasDynamicOffset: true,
+                    minBindingSize: this.uniformSize
+                }
+            }]
+        });
+        
         this.depthTexture = this.device.createTexture({
             size: [this.canvas.width, this.canvas.height],
             format: "depth24plus",
@@ -45,52 +62,6 @@ class Renderer {
             sampleCount: 4,
             format: navigator.gpu.getPreferredCanvasFormat(),
             usage: GPUTextureUsage.RENDER_ATTACHMENT
-        });
-
-        this.uniformBuffer = this.device.createBuffer({
-            size: 16 * Float32Array.BYTES_PER_ELEMENT,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.normalBuffer = this.device.createBuffer({
-            size: 12 * Float32Array.BYTES_PER_ELEMENT,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.colourBuffer = this.device.createBuffer({
-            size: 4* Float32Array.BYTES_PER_ELEMENT,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        const uniformBindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: { type: "uniform" }
-                },
-
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: { type: "uniform" }
-                },
-
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    buffer: { type: "uniform" }
-                }
-            ]
-        });
-
-        this.uniformBindGroup = this.device.createBindGroup({
-            layout: uniformBindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.uniformBuffer } },
-                { binding: 1, resource: { buffer: this.normalBuffer } },
-                { binding: 2, resource: { buffer: this.colourBuffer } }
-            ]
         });
 
         const vertexBufferLayout: GPUVertexBufferLayout = {
@@ -108,13 +79,14 @@ class Renderer {
                     offset: 12,
                     shaderLocation: 1
                 },
+                
                 {
                     format: "float32x3",
                     offset: 24,
                     shaderLocation: 2
                 }
             ]
-        };
+        }
 
         const vertexShaderModule = this.device.createShaderModule({
             label: "VertexShader",
@@ -128,7 +100,7 @@ class Renderer {
 
         this.pipeline = this.device.createRenderPipeline({
             label: "Pipeline",
-            layout: this.device.createPipelineLayout({ bindGroupLayouts: [uniformBindGroupLayout]}),
+            layout: this.device.createPipelineLayout({ bindGroupLayouts: [this.uniformBindGroupLayout]}),
             vertex: {
                 module: vertexShaderModule,
                 entryPoint: "vertexMain",
@@ -160,37 +132,57 @@ class Renderer {
         });
     }
 
-    public render(mesh: Mesh) {
+    public render(scene: Scene) {
+        const entities = scene.getEntities();
+
+        if (entities.length > this.uniformCapacity) {
+            this.uniformCapacity = Math.max(entities.length, this.uniformCapacity * 2, 1);
+
+            this.uniformBuffer?.destroy();
+
+            this.uniformBuffer = this.device.createBuffer({
+                label: "DynamicUniformBuffer",
+                size: this.uniformCapacity * this.uniformStride,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+
+            this.uniformBindGroup = this.device.createBindGroup({
+                label: "DynamicUniformBindGroup",
+                layout: this.uniformBindGroupLayout,
+                entries: [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: this.uniformBuffer,
+                            offset: 0,
+                            size: this.uniformSize
+                        }
+                    }
+                ]
+            });
+        }
+
         const camera = this.cameraController.getCamera();
         camera.update();
 
-        const model = mat4.create();
-        mat4.translate(model, model, renderState.position);
-        mat4.rotateX(model, model, renderState.rotation[0]);
-        mat4.rotateY(model, model, renderState.rotation[1]);
-        mat4.rotateZ(model, model, renderState.rotation[2]);
-        mat4.scale(model, model, renderState.scale);
-
-        const mvp = mat4.multiply(mat4.create(), camera.viewProjection, model);
-
-        const normalMatrix = mat3.create();
-        mat3.fromMat4(normalMatrix, model);
-        mat3.invert(normalMatrix, normalMatrix);
-        mat3.transpose(normalMatrix, normalMatrix);
-
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, mvp as Float32Array);
-        this.device.queue.writeBuffer(this.normalBuffer, 0, normalMatrix as Float32Array);
-        this.device.queue.writeBuffer(this.colourBuffer, 0, new Float32Array([renderState.meshColour[0], renderState.meshColour[1], renderState.meshColour[2], 1.0]));
-
         const encoder = this.device.createCommandEncoder();
+
         const pass = encoder.beginRenderPass({
-            colorAttachments: [{
-                view: this.msaaColourTexture.createView(),
-                resolveTarget: this.canvasContext!.getCurrentTexture().createView(),
-                loadOp: "clear",
-                clearValue: {r: 0.05, g: 0.05, b: 0.07, a: 1},
-                storeOp: "store"
-            }],
+            colorAttachments: [
+                {
+                    view: this.msaaColourTexture.createView(),
+                    resolveTarget: this.canvasContext!.getCurrentTexture().createView(),
+                    loadOp: "clear",
+                    clearValue: {
+                        r: 0.05,
+                        g: 0.05,
+                        b: 0.057,
+                        a: 1
+                    },
+
+                    storeOp: "store"
+                }
+            ],
 
             depthStencilAttachment: {
                 view: this.depthTexture.createView(),
@@ -199,14 +191,50 @@ class Renderer {
                 depthStoreOp: "store"
             }
         });
-        
-        pass.setPipeline(this.pipeline);
-        pass.setBindGroup(0, this.uniformBindGroup);
-        pass.setVertexBuffer(0, mesh.vertexBuffer);
-        pass.setIndexBuffer(mesh.indexBuffer, "uint16");
-        pass.drawIndexed(mesh.indexCount, 1, 0, 0, 0);
-        pass.end();
 
+        pass.setPipeline(this.pipeline);
+
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+
+            const model = mat4.create();
+
+            mat4.translate(model, model, entity.position);
+            mat4.rotateX(model, model, entity.rotation[0]);
+            mat4.rotateY(model, model, entity.rotation[1]);
+            mat4.rotateZ(model, model, entity.rotation[2]);
+            mat4.scale(model, model, entity.scale);
+
+            const mvp = mat4.multiply(mat4.create(), camera.viewProjection, model);
+
+            const normalMatrix = mat3.create();
+            mat3.fromMat4(normalMatrix, model);
+            mat3.invert(normalMatrix, normalMatrix);
+            mat3.transpose(normalMatrix, normalMatrix);
+
+            const uniformData = new Float32Array([
+                ...mvp,
+
+                normalMatrix[0], normalMatrix[1], normalMatrix[2], 0,
+                normalMatrix[3], normalMatrix[4], normalMatrix[5], 0,
+                normalMatrix[6], normalMatrix[7], normalMatrix[8], 0,
+
+                entity.meshColour[0],
+                entity.meshColour[1],
+                entity.meshColour[2],
+                1.0
+            ]);
+
+            this.device.queue.writeBuffer(this.uniformBuffer, i * this.uniformStride, uniformData);
+
+            pass.setBindGroup(0, this.uniformBindGroup, [i * this.uniformStride]);
+            pass.setVertexBuffer(0, entity.mesh.vertexBuffer);
+            pass.setIndexBuffer(entity.mesh.indexBuffer, "uint16");
+            pass.drawIndexed(entity.mesh.indexCount, 1, 0, 0, 0);
+        }
+
+        pass.end();
+        
         this.device.queue.submit([encoder.finish()]);
     }
 }
