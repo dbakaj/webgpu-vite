@@ -26,7 +26,7 @@ function SettingsPanel() {
                         
                         <option value="">Select an entity</option>
 
-                        {entities.map((item, index) => (
+                        {entities.map((_, index) => (
                             <option key={index} value={index}>
                                 Cube {index + 1}
                             </option>                    
@@ -92,7 +92,7 @@ function SettingsPanel() {
                         }
                     }}>
 
-                    {entities.map((item, index) => (
+                    {entities.map((_, index) => (
                         <option key={index} value={index}>
                             Cube {index + 1}
                         </option>
