@@ -14,13 +14,13 @@ class EditorApplication extends Application {
         this.renderer = new Renderer();
         this.scene = new Scene();
 
-        const cube1 = this.scene.addCube();
-        const cube2  = this.scene.addCube();
+        const cube1 = this.scene.addCube("Cube 1");
+        const cube2  = this.scene.addCube("Cube 2");
 
         cube1.position[0] = -2;
         cube2.position[0] = 2;
         cube2.meshColour = [1, 0, 0];
-
+        
         this.selectedEntity = cube1;
 
         this.notify();

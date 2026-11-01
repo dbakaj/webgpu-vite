@@ -4,11 +4,11 @@ import Entity from "./Entity.ts";
 class Scene {
     private entities: Entity[] = [];
 
-    public addCube() {
+    public addCube(name: string) {
         const mesh = new Mesh();
         mesh.loadCube();
 
-        const entity = new Entity("Cube", mesh);
+        const entity = new Entity(name, mesh);
         this.entities.push(entity);
 
         return entity;

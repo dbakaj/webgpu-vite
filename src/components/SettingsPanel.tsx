@@ -3,36 +3,11 @@ import useEditor from "../editor/useEditor.ts";
 function SettingsPanel() {
     const editor = useEditor();
     const entity = editor.getSelectedEntity();
-    const entities = editor.getEntities();
 
     if (!entity) {
         return (
             <div className="settings-panel">
                 <div className="settings-section">
-                    <h3 className="settings-section-title">
-                        Select Entity
-                    </h3>
-
-                    <select
-                        value=""
-                        onChange={(e) => {
-                            const index = Number(e.target.value);
-                            const selected = entities[index];
-
-                            if (selected) {
-                                editor.selectEntity(selected);
-                            }
-                        }}>
-                        
-                        <option value="">Select an entity</option>
-
-                        {entities.map((_, index) => (
-                            <option key={index} value={index}>
-                                Cube {index + 1}
-                            </option>                    
-                        ))}
-                    </select>
-
                     <h3 className="settings-section-title">
                         No Entity Selected
                     </h3>
@@ -40,8 +15,6 @@ function SettingsPanel() {
             </div>
         );
     }
-
-    const selectedIndex = entities.indexOf(entity);
 
     const colour = "#" + entity.meshColour.map((v) => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
     
@@ -76,29 +49,9 @@ function SettingsPanel() {
 
     return (
         <div className="settings-panel">
-            <div className="settings-section">
-                <h3 className="settings-section-title">
-                    Select Entity
-                </h3>
-
-                <select
-                    value={selectedIndex.toString()}
-                    onChange={(e) => {
-                        const index = Number(e.target.value);
-                        const selected = entities[index];
-
-                        if (selected) {
-                            editor.selectEntity(selected);
-                        }
-                    }}>
-
-                    {entities.map((_, index) => (
-                        <option key={index} value={index}>
-                            Cube {index + 1}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            <h3 className="settings-section-title entity-name">
+                {entity.name}
+            </h3>
 
             <div className="settings-section">
                 <h3 className="settings-section-title">
@@ -133,7 +86,7 @@ function SettingsPanel() {
                     </h3>
 
                     {["X", "Y", "Z"].map((axis, i) => {
-                        const displayValue = group.isRotation ? group.values[i] * (100/Math.PI) : group.values[i];
+                        const displayValue = group.isRotation ? group.values[i] * (180/Math.PI) : group.values[i];
 
                         return (
                             <div className="vector-row" key={axis}>

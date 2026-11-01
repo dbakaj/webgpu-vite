@@ -58,6 +58,8 @@ body {
 
     background: #151515;
     color: #eeeeee;
+
+    font-family: inherit;
 }
 
 .settings-section {
@@ -75,11 +77,15 @@ body {
 
     color: #eeeeee;
 
+    font-family: inherit;
     font-size: 12px;
     font-weight: 600;
+    line-height: normal;
 }
 
-/* Colour */
+.entity-name {
+    text-align: center;
+}
 
 .colour-row {
     display: flex;
@@ -141,4 +147,82 @@ input[type="range"] {
     accent-color: #4f8cff;
 
     cursor: pointer;
+}
+
+.hierarchy-panel {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+
+    overflow-y: auto;
+
+    background: #151515;
+    color: #eeeeee;
+
+    font-family: inherit;
+}
+
+.hierarchy-section {
+    margin-bottom: 12px;
+    padding: 12px;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.hierarchy-section-title {
+    margin: 0 0 12px 0;
+
+    color: #eeeeee;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.hierarchy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hierarchy-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 7px 10px;
+
+    border: none;
+    border-radius: 4px;
+
+    background: transparent;
+
+    color: #cccccc;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s ease;
+}
+
+.hierarchy-item:hover {
+    background: #292929;
+}
+
+.hierarchy-item.selected {
+    background: #303030;
+    color: #ffffff;
+}
+
+.hierarchy-icon {
+    color: #999999;
+    font-size: 14px;
 }

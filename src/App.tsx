@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./App.css";
 import ViewPort from "./components/ViewPort.tsx";
 import SettingsPanel from "./components/SettingsPanel.tsx";
+import HierarchyPanel from "./components/HierarchyPanel.tsx";
 import EditorApplication from "./editor/EditorApplication.ts";
 import EditorProvider from "./editor/EditorProvider.tsx";
 
@@ -15,6 +16,7 @@ function App() {
     
     const components = {
         default: () => <></>,
+        hierarchy: () => <HierarchyPanel />,
         settings: () => <SettingsPanel />,
         viewport: () => <ViewPort />
     };
@@ -49,10 +51,10 @@ function App() {
         });
 
         event.api.addPanel({
-            id: "files",
-            component: "default",
+            id: "hierarchy",
+            component: "hierarchy",
             tabComponent: "default",
-            params: { title: "Files" },
+            params: { title: "Hierarchy" },
             position: {
                 referencePanel: "viewport",
                 direction: "left"
@@ -62,7 +64,7 @@ function App() {
         const canvas_panel = event.api.getPanel("viewport");
         canvas_panel!.group.locked = true;
 
-        const files_panel = event.api.getPanel("files");
+        const files_panel = event.api.getPanel("hierarchy");
         files_panel!.group.locked = true;
         files_panel!.api.setSize({ width: 300 });
 
