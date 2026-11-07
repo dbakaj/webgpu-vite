@@ -7,7 +7,7 @@ import HierarchyPanel from "./components/HierarchyPanel.tsx";
 import EditorApplication from "./editor/EditorApplication.ts";
 import EditorProvider from "./editor/EditorProvider.tsx";
 
-import { DockviewReact, type DockviewReadyEvent, type IDockviewPanelHeaderProps } from "dockview";
+import { DockviewReact, type DockviewReadyEvent, type IDockviewPanelHeaderProps } from "dockview-react";
 
 import "dockview/dist/styles/dockview.css";
 
