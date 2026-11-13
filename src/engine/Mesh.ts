@@ -14,7 +14,7 @@ class Mesh {
         this.device = webgpuContext.getDevice();
     }
 
-    public loadCube() {
+    public loadCube(): void {
         const vertices = new Float32Array([
             -1, -1,  1,  1,1,1,  0,0,1,
              1, -1,  1,  1,1,1,  0,0,1,
@@ -86,7 +86,7 @@ class Mesh {
         this.device.queue.writeBuffer(this.indexBuffer, 0, indices);
     }
 
-    public async load(url: string) {
+    public async load(url: string): Promise<void> {
         const io = new NodeIO().registerExtensions([KHRMeshQuantization]);
         const buffer = await fetch(url).then(r => r.arrayBuffer());
         const uint8Array = new Uint8Array(buffer);

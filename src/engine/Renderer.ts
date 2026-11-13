@@ -132,7 +132,7 @@ class Renderer {
         });
     }
 
-    public render(scene: Scene) {
+    public render(scene: Scene): void {
         const entities = scene.getEntities();
 
         if (entities.length > this.uniformCapacity) {

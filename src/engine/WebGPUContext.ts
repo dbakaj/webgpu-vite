@@ -8,7 +8,7 @@ class WebGPUContext {
         this.canvas = canvas;
     }
 
-    private async init() {
+    private async init(): Promise<void> {
         const adapter = await navigator.gpu.requestAdapter();
         this.device = await adapter!.requestDevice();
         this.canvasContext = this.canvas.getContext("webgpu");
@@ -21,7 +21,7 @@ class WebGPUContext {
         });
     }
 
-    public static async create(canvas: HTMLCanvasElement) {
+    public static async create(canvas: HTMLCanvasElement): Promise<WebGPUContext> {
         if (!WebGPUContext.instance) {
             const instance = new WebGPUContext(canvas);
             await instance.init();
@@ -31,19 +31,19 @@ class WebGPUContext {
         return WebGPUContext.instance;
     }
 
-    public static getInstance() {
+    public static getInstance(): WebGPUContext {
         return WebGPUContext.instance;
     }
 
-    public getDevice() {
+    public getDevice(): GPUDevice {
         return this.device;
     }
 
-    public getCanvas() {
+    public getCanvas(): HTMLCanvasElement {
         return this.canvas;
     }
 
-    public getCanvasContext() {
+    public getCanvasContext(): GPUCanvasContext | null {
         return this.canvasContext;
     }
 }

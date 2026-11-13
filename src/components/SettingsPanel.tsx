@@ -1,6 +1,6 @@
 import useEditor from "../editor/useEditor.ts";
 
-function SettingsPanel() {
+function SettingsPanel(): React.JSX.Element {
     const editor = useEditor();
     const entity = editor.getSelectedEntity();
 

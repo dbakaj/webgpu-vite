@@ -4,12 +4,12 @@ abstract class Application {
     protected abstract onRender(): void;
     protected abstract onInit(): void;
     
-    public async init(canvas: HTMLCanvasElement) {
+    public async init(canvas: HTMLCanvasElement): Promise<void> {
         await WebGPUContext.create(canvas);
         this.onInit();
     }
 
-    public run() {
+    public run(): void {
         const loop = () => {
             this.onRender();
             requestAnimationFrame(loop);

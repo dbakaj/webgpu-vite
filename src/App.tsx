@@ -11,7 +11,7 @@ import { DockviewReact, type DockviewReadyEvent, type IDockviewPanelHeaderProps 
 
 import "dockview/dist/styles/dockview.css";
 
-function App() {
+function App(): React.JSX.Element {
     const [editor] = useState(() => new EditorApplication());
     
     const components = {

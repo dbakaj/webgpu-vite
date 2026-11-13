@@ -1,7 +1,7 @@
 import {useEffect, useRef} from "react";
 import useEditor from "../editor/useEditor";
 
-function ViewPort() {
+function ViewPort(): React.JSX.Element {
     const cref = useRef<HTMLCanvasElement>(null);
     const editor = useEditor();
 

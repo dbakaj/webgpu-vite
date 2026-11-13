@@ -12,7 +12,7 @@ class Camera {
         this.projection = mat4.perspective(mat4.create(), fovy, aspectRatio, near, far);
     }
 
-    public update() {
+    public update(): void {
         const cameraPosition = new Float32Array([
            this.zoom * Math.cos(this.pitch) * Math.sin(this.yaw), 
            this.zoom * Math.sin(this.pitch), 
@@ -35,7 +35,7 @@ class CameraController {
         this.camera = camera;
     }
 
-    public initEvents(canvas: HTMLCanvasElement) {
+    public initEvents(canvas: HTMLCanvasElement): void {
         canvas.addEventListener("mousedown", (e) => {
             this.isDragging = true;
             this.lastMouseX = e.clientX;
@@ -80,7 +80,7 @@ class CameraController {
         }, { passive: false });
     }
 
-    public getCamera() {
+    public getCamera(): Camera {
         return this.camera;
     }
 }

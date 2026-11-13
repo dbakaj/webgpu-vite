@@ -1,8 +1,10 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import EditorApplication from "./EditorApplication.ts";
 import EditorContext from "./EditorContext.ts";
 
-function EditorProvider({editor, children}: {editor: EditorApplication; children: React.ReactNode}) {
+
+function EditorProvider({editor, children}: {editor: EditorApplication; children: React.ReactNode}): React.JSX.Element {
     const [, setVersion] = useState(0);
 
     useEffect(() => {

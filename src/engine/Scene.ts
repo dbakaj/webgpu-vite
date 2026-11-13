@@ -4,7 +4,7 @@ import Entity from "./Entity.ts";
 class Scene {
     private entities: Entity[] = [];
 
-    public addCube(name: string) {
+    public addCube(name: string): Entity {
         const mesh = new Mesh();
         mesh.loadCube();
 
@@ -14,7 +14,7 @@ class Scene {
         return entity;
     }
 
-    public getEntities() {
+    public getEntities(): Entity[] {
         return this.entities;
     }
 }

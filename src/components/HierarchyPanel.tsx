@@ -1,6 +1,6 @@
 import useEditor from "../editor/useEditor.ts";
 
-function HierarchyPanel() {
+function HierarchyPanel(): React.JSX.Element {
     const editor = useEditor();
 
     const entities = editor.getEntities();

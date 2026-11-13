@@ -10,7 +10,7 @@ class EditorApplication extends Application {
 
     private listeners = new Set<() => void>();
 
-    protected onInit() {
+    protected onInit(): void {
         this.renderer = new Renderer();
         this.scene = new Scene();
 
@@ -26,31 +26,31 @@ class EditorApplication extends Application {
         this.notify();
     }
 
-    protected onRender() {
+    protected onRender(): void {
         this.renderer.render(this.scene);
     }
 
-    public setPosition(entity: Entity, axis: number, value: number) {
+    public setPosition(entity: Entity, axis: number, value: number): void {
         entity.position[axis] = value;
         this.notify();
     }
 
-    public setRotation(entity: Entity, axis: number, value: number) {
+    public setRotation(entity: Entity, axis: number, value: number): void {
         entity.rotation[axis] = value;
         this.notify();
     }
 
-    public setScale(entity: Entity, axis: number, value: number) {
+    public setScale(entity: Entity, axis: number, value: number): void {
         entity.scale[axis] = value;
         this.notify();
     }
 
-    public setMeshColour(entity: Entity, colour: [number, number, number]) {
+    public setMeshColour(entity: Entity, colour: [number, number, number]): void {
         entity.meshColour = colour;
         this.notify();
     }
 
-    public getSelectedEntity() {
+    public getSelectedEntity(): Entity | null {
         return this.selectedEntity;
     }
 
@@ -58,16 +58,16 @@ class EditorApplication extends Application {
         return this.scene?.getEntities() ?? [];
     }
 
-    public getScene() {
+    public getScene(): Scene {
         return this.scene;
     }
 
-    public selectEntity(entity: Entity) {
+    public selectEntity(entity: Entity): void {
         this.selectedEntity = entity;
         this.notify();
     }
 
-    public subscribe(listener: () => void) {
+    public subscribe(listener: () => void): () => void {
         this.listeners.add(listener);
 
         return () => {
@@ -75,7 +75,7 @@ class EditorApplication extends Application {
         };
     }
 
-    private notify() {
+    private notify(): void {
         for (const listener of this.listeners) {
             listener();
         }
